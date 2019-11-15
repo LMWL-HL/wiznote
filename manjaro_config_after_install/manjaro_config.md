@@ -57,6 +57,11 @@
     ```
     具体的配置就参考spacevim的[官网](https://spacevim.org/quick-start-guide/)啦。
 
+##### 安装powerdevil
+
+安装 powerdevil 以便使用 KDE 内置的 "PowerDevil 电源管理"的节能服务，它可以用于调整系统的节能配置、（如果支持的话）屏幕的亮度并提供更详细的电源报告。
+
+    sudo pacman -S powerdevil
 
 ##### 安装aria2终端下载工具
     yay -S aria2
@@ -135,9 +140,19 @@
 ##### 安装为知笔记
     yay -S wiznote
 
-##### 安装vmware（暂时还有问题）
+##### 安装vmware
 
 * 去[官网](https://my.vmware.com/en/web/vmware/info/slug/desktop_end_user_computing/vmware_workstation_pro/15_0#)下载linux版
+
+* 安装依赖
+    ```
+    sudo pacman -S fuse2
+    yay -S gksu
+    sudo pacman -S gtkmm
+    yay -S ncurses5-compat-libs
+    sudo pacman -S libcanbrra
+    ```
+
 * 安装
     ```
     chmod +x xxx.bundle
@@ -149,6 +164,40 @@
     ```
     sudo pacman -S linux-headers
     ```
+
+* 创建systemd服务  
+    * 创建并编辑`/etc/systemd/system/vmware.service`，在文件中写入以下信息：
+        ```
+        [Unit]
+        Description=VMware daemon
+        Requires=vmware-usbarbitrator.service
+        Before=vmware-usbarbitrator.service
+        After=network.target
+
+        [Service]
+        ExecStart=/etc/init.d/vmware start
+        ExecStop=/etc/init.d/vmware stop
+        PIDFile=/var/lock/subsys/vmware
+        RemainAfterExit=yes
+
+        [Install]
+        WantedBy=multi-user.target
+        ```
+    * 创建并编辑`/etc/systemd/system/vmware-usbarbitrator.service`，在文件中写入以下信息：
+        ```
+        [Unit]
+        Description=VMware USB Arbitrator
+        Requires=vmware.service
+        After=vmware.service
+
+        [Service]
+        ExecStart=/usr/bin/vmware-usbarbitrator
+        ExecStop=/usr/bin/vmware-usbarbitrator --kill
+        RemainAfterExit=yes
+
+        [Install]
+        WantedBy=multi-user.target
+        ```
 
 * 设置vmware.service自启动
     ```
